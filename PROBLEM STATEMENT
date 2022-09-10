@@ -1,0 +1,54 @@
+Problem statement : - To get data in a table from multiple telc_date table. Fields - TELLER_ID,BRANCH_NO,TRAN_NO,CHANGE_DT,CHANGE_TIME,LOGIN_STATUS. Everything should be distinct
+
+INPUT : DATE 
+
+COLUMNS IN TELC : TELLER_ID,BRANCH_NO,TRAN_NO,CHANGE_DT,CHANGE_TIME,LOGIN_STATUS
+COLUMNS IN BRHM : KEY_1(BRANCH_NO),BR_NAME,CIRCLE_CODE
+
+DECODE(TRAN_NO,9001,'LOGIN_TIME',9002,'LOGOUT_TIME')"LOGIN_STATUS"
+
+select DECODE(TRAN_NO,9001,'LOGIN_TIME') "LOGIN_STATUS" from telc where SOC_NO = '003' and teller_id = '0000000006490921'
+select DECODE(TRAN_NO,9003,'LOGOUT_TIME') "LOGIN_STATUS" from telc where SOC_NO = '003' and teller_id = '0000000006490921' and TRAN_NO = '9003';
+
+col TELLER_MACH_NAME format a10
+
+
+-------------------------
+Table that comes under the given date
+
+sid=`grep "SID" $card/INCT_ARCH.card | awk -F " " '{print $2}'`
+export TWO_TASK=$sid
+
+rm $sysout/INCT_ARCHIVALl_${p_run_date}.out
+
+v_dd=`date | awk '{print $3}'`
+v_mm=`date | awk '{print $2}'`
+v_yy=`date | awk '{print $6}'`
+P_RUN_DATE=$v_dd"-"$v_mm"-"$v_yy
+echo "date : "$P_RUN_DATE
+
+
+DB_QUERY() {
+        queryResult=`sqlplus -s \/ << EOF
+        set feedback off
+        set head off
+        set pages 0
+        $@;
+        show sqlcode;
+        commit;
+        exit;
+EOF`
+        export sqlCode=`echo "$queryResult" | grep sqlcode | awk '{print $2}'`
+        export queryResult=`echo "$queryResult" | grep -v sqlcode`
+}
+t_date = 
+DB_QUERY "select to_char(to_date($t_date,'YYYYMMDD'),'J')-2415020 from dual"
+t_bin_date = `echo $queryResult`
+
+
+
+for i in `DB_QUERY "select TABLE_NAME from dba_tables where TABLE_NAME like '%TELC%'"`
+do
+echo $i 
+done
+
