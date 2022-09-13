@@ -114,3 +114,27 @@ BEGIN
         return v_telc_tab;
     end;
 end tellr_det_body;    
+
+
+declare
+    type telc_table_name is table of all_tables.table_name%type index by BINARY_INTEGER;
+    type telc_table_date is table of varchar(64) index by BINARY_INTEGER;
+
+    v_table_name telc_table_name;
+    v_table_date telc_table_date;
+
+    cursor t_date is select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%';
+begin
+    open t_date;
+       fetch t_date bulk collect into v_table_name,v_table_date;
+       dbms_output.put_line('Checking out loop ');
+       for i in 1..v_table_name.count
+       LOOP
+       IF ((to_number(to_char(to_date(v_table_date(i),'YYYYMMDD'),'J')-2415020) - 44279) > 0) THEN
+
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i));
+       END IF;
+       end loop;
+    close t_date;
+end;
+
