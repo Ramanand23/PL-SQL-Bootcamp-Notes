@@ -61,3 +61,56 @@ begin
     dbms_output.put_line(v_table_name);
 end;
 /
+
+----------------------------------------------------------------------------------------------------------------------------------
+set serveroutput on
+declare
+    type v_table_name is table of all_tables%rowtype;
+    v_telc_tab v_table_name;
+    cursor t_date is select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%';
+begin
+    for t_date in (select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%') loop
+        if (to_number(to_char(to_date(t_date.TABLE_DATE,'YYYYMMDD'),'J')-2415020) - 44113) > 0 then
+                v_telc_tab(t_date.table_name) := t_date; 
+        end if;
+    end loop;
+end;
+/
+------------------------------------------------------------------------------------------------------------------------------------
+
+Using package
+
+create or replace package tellr_det as 
+  type v_table_name is table of all_tables%rowtype index by VARCHAR2(64);
+  cursor tab_date is select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%'; 
+  procedure teller_tables; 
+  function get_telc_tables return v_table_name;
+  
+end tellr_det;
+
+set serveroutput on
+create or replace PACKAGE BODY tellr_det_body AS
+
+  /*
+    This function returns all the employees in employees table
+  */
+BEGIN  
+    
+    begin 
+    null;
+    end;
+    
+    
+    function get_telc_tables return v_table_name is
+    v_telc_tab v_table_name;
+    begin
+        for tab_date in (select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%') loop
+            if (to_number(to_char(to_date(t_date.TABLE_DATE,'YYYYMMDD'),'J')-2415020) - 44113) > 0 then
+              v_telc_tab(t_date.table_name) := t_date; 
+              dbms_output.put_line(v_telc_tab);
+            end if;
+        end loop;
+        
+        return v_telc_tab;
+    end;
+end tellr_det_body;    
