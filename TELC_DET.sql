@@ -138,3 +138,16 @@ begin
     close t_date;
 end;
 
+------------------------------------------------------------------------------------------------------------------------------
+
+insert into DATE_WISE_TELLER_DETAILS
+            (TELLR_ID,
+            BRH_NO,                  /*inserting into columns and fetching column name  should not be same. Should be differenct*/
+            FIRST_LOGIN_TIME,
+            LAST_LOGOUT_TIME,
+            DT)
+select TELLER_ID,
+            BRANCH_NO,
+            MIN(CHANGE_TIME),
+            MAX(CHANGE_TIME),
+            CHANGE_DT from table(v_table_name(i)) where SOC_NO = '003' and TRAN_NO = '009001' group by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME) order by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME);
