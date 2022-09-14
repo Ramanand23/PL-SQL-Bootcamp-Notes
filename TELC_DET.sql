@@ -131,8 +131,11 @@ begin
        for i in 1..v_table_name.count
        LOOP
        IF ((to_number(to_char(to_date(v_table_date(i),'YYYYMMDD'),'J')-2415020) - 44279) > 0) THEN
-
+        
+        execute immediate 'select count(*) from '|| v_table_name(i) into row_count;    
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i) || ' v_table_count : ' || row_count)  ;
         dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i));
+       
        END IF;
        end loop;
     close t_date;
