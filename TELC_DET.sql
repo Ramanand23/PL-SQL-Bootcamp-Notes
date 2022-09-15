@@ -216,3 +216,14 @@ FROM TELC group by teller_id,change_time,tran_no;
 
 
 select * from TELC where  tran_no = '009003';
+
+--------------------------------------------------------------------------------------------
+select 
+TELLER_ID,
+BRANCH_NO,
+MIN(CHANGE_TIME),
+--MAX(CHANGE_TIME),
+CHANGE_DT 
+from telc 
+where SOC_NO = '003' and TRAN_NO = '009001'
+group by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME),CHANGE_DT order by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME),CHANGE_DT;
