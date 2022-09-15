@@ -154,3 +154,65 @@ select TELLER_ID,
             MIN(CHANGE_TIME),
             MAX(CHANGE_TIME),
             CHANGE_DT from table(v_table_name(i)) where SOC_NO = '003' and TRAN_NO = '009001' group by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME) order by TELLER_ID,BRANCH_NO,TRUNC(CHANGE_TIME);
+----------------------------------------------------
+
+
+
+declare
+    type telc_table_name is table of all_tables.table_name%type index by BINARY_INTEGER;
+    type telc_table_date is table of varchar(64) index by BINARY_INTEGER;
+
+    v_table_name telc_table_name;
+    v_table_date telc_table_date;
+    
+    socno char(3) := '003';
+    login_tran char(6) := '009001';
+    logout_tran char(6) := '009003';
+    login_query VARCHAR2(2000);
+
+    cursor t_date is select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%';
+begin
+    open t_date;
+       fetch t_date bulk collect into v_table_name,v_table_date;
+       dbms_output.put_line('Checking out loop ');
+       for i in 1..v_table_name.count
+       LOOP
+       IF ((to_number(to_char(to_date(v_table_date(i),'YYYYMMDD'),'J')-2415020) - 44279) > 0) THEN
+        
+        --insrt := 'insert into DATE_WISE_TELLER_DETAILS(TELLER_ID,BRANCH_NO,FIRST_LOGIN_TIME,FIRST_LOGIN_TIME,LAST_LOGOUT_TIME,DT)';
+        login_query  := 'select TELLER_ID,BRANCH_NO,MIN(CHANGE_TIME),CHANGE_DT from ' || v_table_name(i) || ' where SOC_NO = ''' || socno || ''' and TRAN_NO = ''' || login_tran || ''' group by TELLER_ID,BRANCH_NO,CHANGE_TIME order by TELLER_ID,BRANCH_NO,CHANGE_TIME';
+        execute immediate 'insert into DATE_WISE_TELLER_DETAILS(TELLR_ID,BRH_NO,FIRST_LOGIN_TIME,DT) ' || login_query ;        
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i) || ' v_table_count : ')  ;
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i));
+       
+       END IF;
+       end loop;
+    close t_date;
+end;
+
+desc DATE_WISE_TELLER_DETAILS
+
+desc telc
+@/app/oracle/product/19.3.0/dbhome_1/rdbms/admin/catproc.sql
+
+
+insert into DATE_WISE_TELLER_DETAILS (TELLR_ID,BRH_NO,FIRST_LOGIN_TIME,LAST_LOGOUT_TIME,DT) 
+select TELLER_ID,BRANCH_NO,MIN(CHANGE_TIME),MAX(CHANGE_TIME),CHANGE_DT from telc where SOC_NO = '003' and TRAN_NO = '009001' group by TELLER_ID,BRANCH_NO,CHANGE_TIME,CHANGE_DT order by TELLER_ID,BRANCH_NO,CHANGE_TIME,CHANGE_DT;
+
+'select TELLER_ID,BRANCH_NO,CHANGE_TIME,CHANGE_DT from ' || v_table_name(i) || ' where SOC_NO = ''' || socno || ''' and TRAN_NO = ''' || login_tran || ''' group by TELLER_ID,BRANCH_NO,CHANGE_TIME order by TELLER_ID,BRANCH_NO,CHANGE_TIME';
+
+truncate table DATE_WISE_TELLER_DETAILS;
+select * from DATE_WISE_TELLER_DETAILS;
+
+SELECT VALUE FROM V$DIAG_INFO WHERE NAME = 'Diag Trace';
+
+SELECT TELLER_ID,
+CASE
+  WHEN TRAN_NO = 009001 THEN MIN(CHANGE_TIME)
+  WHEN TRAN_NO = 009003  THEN MAX(CHANGE_TIME) 
+  ELSE 'The owner is another value'
+END
+FROM TELC group by teller_id,change_time,tran_no;
+
+
+select * from TELC where  tran_no = '009003';
