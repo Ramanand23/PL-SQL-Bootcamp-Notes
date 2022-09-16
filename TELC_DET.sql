@@ -240,4 +240,17 @@ END AS LOGIN_TIME,
 CASE WHEN TRAN_NO = '009003' THEN (MAX(CHANGE_TIME))
 END AS LOGOUT_TIME
 FROM archsbi.TELC_20220828 group by TELLER_ID,BRANCH_NO,CHANGE_DT,TRAN_NO order by TELLER_ID,BRANCH_NO,CHANGE_DT;
+------------------------------------------------------------------------------------------------------
 
+select brhm.BR_NAME,brhm.CIRCLE_CODE,DATE_WISE_TELLER_DETAILS.BRH_NO from brhm inner join DATE_WISE_TELLER_DETAILS on substr(brhm.key_1,15,5) = DATE_WISE_TELLER_DETAILS.BRH_NO;
+
+
+select to_number(to_char(to_date(20220419,'YYYYMMDD'),'J')-2415020) from dual;
+
+
+select brhm.BR_NAME,brhm.CIRCLE_CODE,DATE_WISE_TELLER_DETAILS.BRH_NO from brhm,DATE_WISE_TELLER_DETAILS where substr(brhm.key_1,15,5) = DATE_WISE_TELLER_DETAILS.BRH_NO;   
+
+
+select substr(brhm.key_1,15,5) from brhm;
+
+-------------------------------------------------------------------------------------------------------------------
