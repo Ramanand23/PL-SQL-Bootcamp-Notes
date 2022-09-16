@@ -254,3 +254,48 @@ select brhm.BR_NAME,brhm.CIRCLE_CODE,DATE_WISE_TELLER_DETAILS.BRH_NO from brhm,D
 select substr(brhm.key_1,15,5) from brhm;
 
 -------------------------------------------------------------------------------------------------------------------
+declare
+    type telc_table_name is table of all_tables.table_name%type index by BINARY_INTEGER;
+    type telc_table_date is table of varchar(64) index by BINARY_INTEGER;
+
+    v_table_name telc_table_name;
+    v_table_date telc_table_date;
+    
+    socno char(3) := '003';
+    login_tran char(6) := '009001';
+    logout_tran char(6) := '009003';
+    login_query VARCHAR2(2000);
+	brhm_query varchar2(20000);
+
+    cursor t_date is select TABLE_NAME,TO_NUMBER((substr(TABLE_NAME,6,8)),99999999) "TABLE_DATE" from all_tables where TABLE_NAME like 'TELC%';
+begin
+    open t_date;
+       fetch t_date bulk collect into v_table_name,v_table_date;
+       dbms_output.put_line('Checking out loop ');
+       for i in 1..v_table_name.count
+       LOOP
+       IF ((to_number(to_char(to_date(v_table_date(i),'YYYYMMDD'),'J')-2415020) - 44279) > 0) THEN
+        v_inserted := 0;
+        --insrt := 'insert into DATE_WISE_TELLER_DETAILS(TELLER_ID,BRANCH_NO,FIRST_LOGIN_TIME,FIRST_LOGIN_TIME,LAST_LOGOUT_TIME,DT)';
+        login_query  := 'select A.TELLER_ID,A.BRANCH_NO,A.CHANGE_DT,A.LOGIN_TIME,B.LOGOFF_TIME from (select TELLER_ID,BRANCH_NO,CHANGE_DT,MIN(CHANGE_TIME) LOGIN_TIME from ' || v_table_name(i) || ' where SOC_NO = ''' || socno || ''' and TRAN_NO = ''' || login_tran || ''' group by TELLER_ID,BRANCH_NO,CHANGE_DT) A
+		LEFT JOIN 
+       (select TELLER_ID,BRANCH_NO,CHANGE_DT,MAX(CHANGE_TIME) LOGOFF_TIME from' || v_table_name(i) || ' where SOC_NO = ''' || socno || ''' and TRAN_NO = ''' || logout_tran || ''' group by TELLER_ID,BRANCH_NO,CHANGE_DT) B ON A.TELLER_ID=B.TELLER_ID AND A.BRANCH_NO=B.BRANCH_NO and A.CHANGE_DT=B.CHANGE_DT' ;
+        
+		execute immediate 'insert into DATE_WISE_TELLER_DETAILS(TELLR_ID,BRH_NO,FIRST_LOGIN_TIME,DT) ' || login_query ;        
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i) || ' v_table_count : ')  ;
+        dbms_output.put_line('v_table_name : ' || v_table_name(i) || ' v_table_date : ' || v_table_date(i));
+		v_inserted := sql%rowcount;
+       
+       END IF;
+       end loop;
+    close t_date;
+	
+	if t_date%isopen
+    then
+      close t_date;
+	ELSIF 
+		brhm_query := '';
+		execute immediate 'insert into DATE_WISE_TELLER_DETAILS(BR_NAME,CIRCLE_CODE) for brhm_query';	
+			
+    end if;
+end;
